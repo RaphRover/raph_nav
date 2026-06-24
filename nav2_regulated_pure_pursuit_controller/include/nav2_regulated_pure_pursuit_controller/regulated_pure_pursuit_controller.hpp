@@ -32,6 +32,7 @@
 #include "nav2_regulated_pure_pursuit_controller/collision_checker.hpp"
 #include "nav2_regulated_pure_pursuit_controller/parameter_handler.hpp"
 #include "nav2_regulated_pure_pursuit_controller/regulation_functions.hpp"
+#include "nav2_regulated_pure_pursuit_controller/dynamic_window_pure_pursuit_functions.hpp"
 
 namespace nav2_regulated_pure_pursuit_controller
 {
@@ -221,6 +222,7 @@ protected:
   bool finished_cancelling_ = false;
   bool is_rotating_to_heading_ = false;
   bool has_reached_xy_tolerance_ = false;
+  geometry_msgs::msg::Twist last_command_velocity_;
 
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> global_path_pub_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PointStamped>>

@@ -25,7 +25,7 @@
 #include "nav2_costmap_2d/costmap_2d_ros.hpp"
 #include "nav2_costmap_2d/footprint_collision_checker.hpp"
 #include "nav2_util/odometry_utils.hpp"
-#include "geometry_msgs/msg/pose2_d.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "nav2_regulated_pure_pursuit_controller/parameter_handler.hpp"
 
 #include "nav2_core/controller_exceptions.hpp"
@@ -67,7 +67,7 @@ public:
   bool isCollisionImminent(
     const geometry_msgs::msg::PoseStamped &,
     const double &, const double &,
-    const double &);
+    const double &, const double &);
 
   /**
    * @brief checks for collision at projected pose

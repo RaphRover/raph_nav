@@ -36,8 +36,25 @@ ParameterHandler::ParameterHandler(
   plugin_name_ = plugin_name;
   logger_ = logger;
 
+  // Support deprecated "desired_linear_vel" param name → "max_linear_vel"
   declare_parameter_if_not_declared(
-    node, plugin_name_ + ".desired_linear_vel", rclcpp::ParameterValue(0.5));
+    node, plugin_name_ + ".desired_linear_vel", rclcpp::ParameterValue(-1.0));
+  double desired_linear_vel_legacy;
+  node->get_parameter(plugin_name_ + ".desired_linear_vel", desired_linear_vel_legacy);
+  if (desired_linear_vel_legacy > 0.0) {
+    RCLCPP_WARN(
+      logger_,
+      "Parameter '%s.desired_linear_vel' is deprecated. Use '%s.max_linear_vel' instead.",
+      plugin_name_.c_str(), plugin_name_.c_str());
+  }
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_linear_vel", rclcpp::ParameterValue(0.5));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".min_linear_vel", rclcpp::ParameterValue(-0.5));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_angular_vel", rclcpp::ParameterValue(2.5));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".min_angular_vel", rclcpp::ParameterValue(-2.5));
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".lookahead_dist", rclcpp::ParameterValue(0.6));
   declare_parameter_if_not_declared(
@@ -61,6 +78,8 @@ ParameterHandler::ParameterHandler(
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".max_allowed_time_to_collision_up_to_carrot",
     rclcpp::ParameterValue(1.0));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".min_distance_to_obstacle", rclcpp::ParameterValue(-1.0));
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".use_regulated_linear_velocity_scaling", rclcpp::ParameterValue(true));
   declare_parameter_if_not_declared(
@@ -87,6 +106,12 @@ ParameterHandler::ParameterHandler(
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".max_angular_accel", rclcpp::ParameterValue(3.2));
   declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_linear_accel", rclcpp::ParameterValue(2.5));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_linear_decel", rclcpp::ParameterValue(-2.5));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_angular_decel", rclcpp::ParameterValue(-3.2));
+  declare_parameter_if_not_declared(
     node, plugin_name_ + ".use_cancel_deceleration", rclcpp::ParameterValue(false));
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".cancel_deceleration", rclcpp::ParameterValue(3.2));
@@ -102,10 +127,21 @@ ParameterHandler::ParameterHandler(
     node, plugin_name_ + ".use_collision_detection",
     rclcpp::ParameterValue(true));
   declare_parameter_if_not_declared(
+    node, plugin_name_ + ".use_dynamic_window", rclcpp::ParameterValue(false));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".allow_obstacle_checking_beyond_goal", rclcpp::ParameterValue(false));
+  declare_parameter_if_not_declared(
       node, plugin_name_ + ".stateful", rclcpp::ParameterValue(true));
 
-  node->get_parameter(plugin_name_ + ".desired_linear_vel", params_.desired_linear_vel);
-  params_.base_desired_linear_vel = params_.desired_linear_vel;
+  node->get_parameter(plugin_name_ + ".max_linear_vel", params_.max_linear_vel);
+  // If old deprecated param was set, prefer it
+  if (desired_linear_vel_legacy > 0.0) {
+    params_.max_linear_vel = desired_linear_vel_legacy;
+  }
+  params_.base_max_linear_vel = params_.max_linear_vel;
+  node->get_parameter(plugin_name_ + ".min_linear_vel", params_.min_linear_vel);
+  node->get_parameter(plugin_name_ + ".max_angular_vel", params_.max_angular_vel);
+  node->get_parameter(plugin_name_ + ".min_angular_vel", params_.min_angular_vel);
   node->get_parameter(plugin_name_ + ".lookahead_dist", params_.lookahead_dist);
   node->get_parameter(plugin_name_ + ".min_lookahead_dist", params_.min_lookahead_dist);
   node->get_parameter(plugin_name_ + ".max_lookahead_dist", params_.max_lookahead_dist);
@@ -131,6 +167,23 @@ ParameterHandler::ParameterHandler(
   node->get_parameter(
     plugin_name_ + ".max_allowed_time_to_collision_up_to_carrot",
     params_.max_allowed_time_to_collision_up_to_carrot);
+  node->get_parameter(plugin_name_ + ".min_distance_to_obstacle", params_.min_distance_to_obstacle);
+  if (params_.use_collision_detection && !params_.use_velocity_scaled_lookahead_dist &&
+    params_.min_distance_to_obstacle > params_.lookahead_dist)
+  {
+    RCLCPP_WARN(
+      logger_, "min_distance_to_obstacle (%.02f) is greater than lookahead_dist (%.02f). "
+      "The collision check distance will be capped by lookahead_dist.",
+      params_.min_distance_to_obstacle, params_.lookahead_dist);
+  }
+  if (params_.use_collision_detection && params_.use_velocity_scaled_lookahead_dist &&
+    params_.min_distance_to_obstacle > params_.max_lookahead_dist)
+  {
+    RCLCPP_WARN(
+      logger_, "min_distance_to_obstacle (%.02f) is greater than max_lookahead_dist (%.02f). "
+      "The collision check distance will be capped by max_lookahead_dist.",
+      params_.min_distance_to_obstacle, params_.max_lookahead_dist);
+  }
   node->get_parameter(
     plugin_name_ + ".use_regulated_linear_velocity_scaling",
     params_.use_regulated_linear_velocity_scaling);
@@ -158,6 +211,9 @@ ParameterHandler::ParameterHandler(
   node->get_parameter(
     plugin_name_ + ".rotate_to_heading_min_angle", params_.rotate_to_heading_min_angle);
   node->get_parameter(plugin_name_ + ".max_angular_accel", params_.max_angular_accel);
+  node->get_parameter(plugin_name_ + ".max_linear_accel", params_.max_linear_accel);
+  node->get_parameter(plugin_name_ + ".max_linear_decel", params_.max_linear_decel);
+  node->get_parameter(plugin_name_ + ".max_angular_decel", params_.max_angular_decel);
   node->get_parameter(plugin_name_ + ".use_cancel_deceleration", params_.use_cancel_deceleration);
   node->get_parameter(plugin_name_ + ".cancel_deceleration", params_.cancel_deceleration);
   node->get_parameter(plugin_name_ + ".allow_reversing", params_.allow_reversing);
@@ -183,6 +239,21 @@ ParameterHandler::ParameterHandler(
   node->get_parameter(
     plugin_name_ + ".use_collision_detection",
     params_.use_collision_detection);
+  node->get_parameter(plugin_name_ + ".use_dynamic_window", params_.use_dynamic_window);
+  node->get_parameter(
+    plugin_name_ + ".allow_obstacle_checking_beyond_goal",
+    params_.allow_obstacle_checking_beyond_goal);
+  if (params_.allow_obstacle_checking_beyond_goal && !params_.use_velocity_scaled_lookahead_dist) {
+    RCLCPP_WARN(
+      logger_, "Parameter 'allow_obstacle_checking_beyond_goal' requires "
+      "'use_velocity_scaled_lookahead_dist' to be enabled.");
+  }
+  if (params_.allow_obstacle_checking_beyond_goal && params_.min_distance_to_obstacle <= 0.0) {
+    RCLCPP_WARN(
+      logger_,
+      "Parameter 'allow_obstacle_checking_beyond_goal' requires "
+      "'min_distance_to_obstacle' to be greater than 0.0. ");
+  }
   node->get_parameter(plugin_name_ + ".stateful", params_.stateful);
 
   if (params_.inflation_cost_scaling_factor <= 0.0) {
@@ -228,8 +299,17 @@ ParameterHandler::dynamicParametersCallback(
         }
         params_.inflation_cost_scaling_factor = parameter.as_double();
       } else if (name == plugin_name_ + ".desired_linear_vel") {
-        params_.desired_linear_vel = parameter.as_double();
-        params_.base_desired_linear_vel = parameter.as_double();
+        params_.max_linear_vel = parameter.as_double();
+        params_.base_max_linear_vel = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_linear_vel") {
+        params_.max_linear_vel = parameter.as_double();
+        params_.base_max_linear_vel = parameter.as_double();
+      } else if (name == plugin_name_ + ".min_linear_vel") {
+        params_.min_linear_vel = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_angular_vel") {
+        params_.max_angular_vel = parameter.as_double();
+      } else if (name == plugin_name_ + ".min_angular_vel") {
+        params_.min_angular_vel = parameter.as_double();
       } else if (name == plugin_name_ + ".lookahead_dist") {
         params_.lookahead_dist = parameter.as_double();
       } else if (name == plugin_name_ + ".max_lookahead_dist") {
@@ -246,6 +326,8 @@ ParameterHandler::dynamicParametersCallback(
         params_.curvature_lookahead_dist = parameter.as_double();
       } else if (name == plugin_name_ + ".max_allowed_time_to_collision_up_to_carrot") {
         params_.max_allowed_time_to_collision_up_to_carrot = parameter.as_double();
+      } else if (name == plugin_name_ + ".min_distance_to_obstacle") {
+        params_.min_distance_to_obstacle = parameter.as_double();
       } else if (name == plugin_name_ + ".cost_scaling_dist") {
         params_.cost_scaling_dist = parameter.as_double();
       } else if (name == plugin_name_ + ".cost_scaling_gain") {
@@ -256,6 +338,12 @@ ParameterHandler::dynamicParametersCallback(
         params_.regulated_linear_scaling_min_speed = parameter.as_double();
       } else if (name == plugin_name_ + ".max_angular_accel") {
         params_.max_angular_accel = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_linear_accel") {
+        params_.max_linear_accel = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_linear_decel") {
+        params_.max_linear_decel = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_angular_decel") {
+        params_.max_angular_decel = parameter.as_double();
       } else if (name == plugin_name_ + ".cancel_deceleration") {
         params_.cancel_deceleration = parameter.as_double();
       } else if (name == plugin_name_ + ".rotate_to_heading_min_angle") {
@@ -276,6 +364,10 @@ ParameterHandler::dynamicParametersCallback(
         params_.use_cost_regulated_linear_velocity_scaling = parameter.as_bool();
       } else if (name == plugin_name_ + ".use_collision_detection") {
         params_.use_collision_detection = parameter.as_bool();
+      } else if (name == plugin_name_ + ".use_dynamic_window") {
+        params_.use_dynamic_window = parameter.as_bool();
+      } else if (name == plugin_name_ + ".allow_obstacle_checking_beyond_goal") {
+        params_.allow_obstacle_checking_beyond_goal = parameter.as_bool();
       } else if (name == plugin_name_ + ".stateful") {
         params_.stateful = parameter.as_bool();
       } else if (name == plugin_name_ + ".use_rotate_to_heading") {
