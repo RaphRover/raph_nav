@@ -1,0 +1,304 @@
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: "map"
+    robot_base_frame: "base_footprint"
+    odom_topic: "merged_odom"
+    bt_loop_duration: 10
+    filter_duration: 0.3
+    default_server_timeout: 20
+    wait_for_service_timeout: 1000
+    service_introspection_mode: "disabled"
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigate_to_pose:
+      plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
+    navigate_through_poses:
+      plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
+
+controller_server:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: "map"
+    odom_topic: "merged_odom"
+    enable_stamped_cmd_vel: false
+    controller_frequency: 20.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.0001
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["stopped_goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::PoseProgressChecker"
+      required_movement_radius: 0.1
+      required_movement_angle: 0.25
+      movement_time_allowance: 10.0
+
+    stopped_goal_checker:
+      stateful: false
+      plugin: "nav2_controller::StoppedGoalChecker"
+      trans_stopped_velocity: 0.05
+      rot_stopped_velocity: 0.05
+      xy_goal_tolerance: 0.2
+      yaw_goal_tolerance: 0.7 #0.15 - consider lowering this, currently a lot of heading error is possible
+
+    # MPPI controller replaced with Regulated Pure Pursuit for smoother ackermann tracking.
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.35 # this will be deprecated, use max_linear_vel if provided
+      #max_linear_vel: 0.5
+      max_angular_accel: 2.0 # Only used in rotate to heading
+      #max_angular_decel: -3.0
+
+      #use_dynamic_window: true
+      # Params only used if use_dynamic_window is true      
+      #min_linear_vel: -0.5
+      #max_angular_vel: 2.0
+      #min_angular_vel: -2.0
+      #max_linear_accel: 2.5
+      #max_linear_decel: -4.0
+      # Note to self: remember that anything to do with path end will apply to cusps with modified nav2_controller
+
+      use_velocity_scaled_lookahead_dist: true
+      # Params only used if use_velocity_scaled_lookahead_dist is true
+      min_lookahead_dist: 0.25
+      max_lookahead_dist: 0.5
+      lookahead_time: 0.8
+      # Params only used if use_velocity_scaled_lookahead_dist is false
+      lookahead_dist: 0.25
+
+      use_regulated_linear_velocity_scaling: true
+      # Params only used if use_regulated_linear_velocity_scaling is true
+      regulated_linear_scaling_min_radius: 0.3
+      regulated_linear_scaling_min_speed: 0.08
+
+      use_cost_regulated_linear_velocity_scaling: false #Maybe true?
+      # Params only used if use_cost_regulated_linear_velocity_scaling is true
+      cost_scaling_dist: 0.25
+      cost_scaling_gain: 0.7
+      inflation_cost_scaling_factor: 7.0
+
+      min_approach_linear_velocity: 0.08 # Maybe adjust this to min vel the robot can achieve (must be bigger that 0.01)
+      approach_velocity_scaling_dist: 0.4
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+
+      use_fixed_curvature_lookahead: true
+      curvature_lookahead_dist: 0.35
+      use_rotate_to_heading: false
+      interpolate_curvature_after_goal: false
+      allow_reversing: true
+      transform_tolerance: 0.1
+      
+      use_cancel_deceleration: false
+      # Params only used if use_cancel_deceleration is true
+      cancel_deceleration: 3.2
+      
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      # Adjust for the size of the environment
+      height: 20
+      width: 20
+      origin_x: -10.0
+      origin_y: -10.0
+      resolution: 0.05
+      rolling_window: false
+      trinary_costmap: true
+      unknown_cost_value: 255
+      lethal_cost_threshold: 100
+      track_unknown_space: true
+      always_send_full_costmap: true
+      use_maximum: false
+      global_frame: "map"
+      robot_base_frame: "base_footprint"
+      transform_tolerance: 0.5
+      footprint_padding: 0.03
+      footprint: "[[0.10, 0.25], [0.10, -0.25], [-0.45, -0.25], [-0.45, 0.25]]"
+      publish_frequency: 1.0
+      update_frequency: 1.0
+      use_sim_time: false
+      plugins: ["static_layer", "obstacle_layer", "denoise_layer", "inflation_layer"]
+
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_topic: "/map"
+        map_subscribe_transient_local: true
+        enabled: true
+        subscribe_to_updates: true
+        transform_tolerance: 0.5
+
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        footprint_clearing_enabled: true
+        observation_sources: pointcloud scan
+        combination_method: 1
+        scan:
+          topic: "/rplidar/scan_filtered"
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.15
+        pointcloud:
+          topic: "/oak/points"
+          data_type: PointCloud2
+          expected_update_rate: 0.0
+          min_obstacle_height: 0.08
+          max_obstacle_height: 0.35
+          inf_is_valid: false
+          marking: true
+          clearing: true
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.0
+
+      denoise_layer:
+        plugin: "nav2_costmap_2d::DenoiseLayer"
+        enabled: true
+
+      inflation_layer:
+        enabled: true
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.56 # Must be above 0.557
+        cost_scaling_factor: 7.0 # Maybe lower it?
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      height: 6
+      width: 6
+      resolution: 0.05
+      rolling_window: true
+      trinary_costmap: true
+      unknown_cost_value: 255
+      lethal_cost_threshold: 100
+      track_unknown_space: false
+      always_send_full_costmap: true
+      use_maximum: false
+      global_frame: "odom"
+      robot_base_frame: "base_footprint"
+      transform_tolerance: 1.0
+      footprint_padding: 0.03
+      footprint: "[[0.10, 0.25], [0.10, -0.25], [-0.45, -0.25], [-0.45, 0.25]]"
+      update_frequency: 2.0
+      publish_frequency: 1.0
+      use_sim_time: false
+      plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
+
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        footprint_clearing_enabled: true
+        observation_sources: pointcloud scan
+        combination_method: 1
+        scan:
+          topic: "/rplidar/scan_filtered"
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.15
+        pointcloud:
+          topic: "/oak/points"
+          data_type: PointCloud2
+          expected_update_rate: 0.0
+          min_obstacle_height: 0.08
+          max_obstacle_height: 0.35
+          inf_is_valid: false
+          marking: true
+          clearing: true
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.0
+
+      denoise_layer:
+        plugin: "nav2_costmap_2d::DenoiseLayer"
+        enabled: true
+
+      inflation_layer:
+        enabled: true
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.56
+        cost_scaling_factor: 7.0 # Maybe lower it?
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 1.0
+    use_sim_time: false
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_smac_planner::SmacPlannerHybrid"
+      downsample_costmap: false
+      downsampling_factor: 1
+      tolerance: 0.25
+      allow_unknown: false # Ideally should be true
+      terminal_checking_interval: 5000
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 5.0
+      motion_model_for_search: "REEDS_SHEPP"
+      angle_quantization_bins: 72
+      analytic_expansion_max_cost: 200.0
+      analytic_expansion_ratio: 3.5
+      analytic_expansion_max_length: 1.5
+      analytic_expansion_max_cost_override: false
+      minimum_turning_radius: 0.3
+      reverse_penalty: 3.0
+      change_penalty: 2.0
+      non_straight_penalty: 1.2
+      cost_penalty: 2.0
+      retrospective_penalty: 0.015
+      lookup_table_size: 10.0
+      cache_obstacle_heuristic: false
+      debug_visualizations: false
+      use_quadratic_cost_penalty: false
+      downsample_obstacle_heuristic: true
+      allow_primitive_interpolation: false
+      # Not implemented yet in Jazzy
+      #goal_heading_mode: "DEFAULT" # Plans to a goal pose with a specific heading, use "ALL_DIRECTION" mode to plan to a goal pose with any heading
+      #coarse_search_resolution: 4
+      smooth_path: true
+      smoother:
+        max_iterations: 1000
+        w_smooth: 0.3
+        w_data: 0.2
+        tolerance: 1.0e-10
+        do_refinement: true
+        refinement_num: 2
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: false
+    stop_on_failure: true
+    loop_rate: 10
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: true
+      waypoint_pause_duration: 200
+
+lifecycle_manager_navigation:
+  ros__parameters:
+    use_sim_time: false
+    autostart: true
+    node_names:
+      - "planner_server"
+      - "controller_server"
+      - "bt_navigator"
+      - "waypoint_follower"
+    bond_timeout: 4.0
+    attempt_respawn_reconnection: true
+    bond_respawn_max_duration: 10.0
