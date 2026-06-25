@@ -234,6 +234,17 @@ protected:
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Bool>>
   is_rotating_to_heading_pub_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> carrot_arc_pub_;
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<
+    ackermann_msgs::msg::AckermannDrive>> ackermann_pub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
+
+  // Ackermann state tracking
+  double current_steering_angle_{0.0};
+  double servo_l_pos_{0.0};
+  double servo_r_pos_{0.0};
+  bool servo_positions_received_{false};
+  bool servo_gate_active_{false};
+
   std::unique_ptr<nav2_regulated_pure_pursuit_controller::PathHandler> path_handler_;
   std::unique_ptr<nav2_regulated_pure_pursuit_controller::ParameterHandler> param_handler_;
   std::unique_ptr<nav2_regulated_pure_pursuit_controller::CollisionChecker> collision_checker_;

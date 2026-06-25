@@ -132,6 +132,23 @@ ParameterHandler::ParameterHandler(
     node, plugin_name_ + ".allow_obstacle_checking_beyond_goal", rclcpp::ParameterValue(false));
   declare_parameter_if_not_declared(
       node, plugin_name_ + ".stateful", rclcpp::ParameterValue(true));
+  // Ackermann steering parameters
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".wheelbase", rclcpp::ParameterValue(0.0));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".track_width", rclcpp::ParameterValue(0.0));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_steering_angle", rclcpp::ParameterValue(1.08));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".max_steering_angle_velocity", rclcpp::ParameterValue(4.0));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".servo_angle_tolerance", rclcpp::ParameterValue(0.08));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".servo_gate_release_tolerance", rclcpp::ParameterValue(0.04));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".ackermann_acceleration", rclcpp::ParameterValue(2.0));
+  declare_parameter_if_not_declared(
+    node, plugin_name_ + ".ackermann_jerk", rclcpp::ParameterValue(16.0));
 
   node->get_parameter(plugin_name_ + ".max_linear_vel", params_.max_linear_vel);
   // If old deprecated param was set, prefer it
@@ -255,6 +272,14 @@ ParameterHandler::ParameterHandler(
       "'min_distance_to_obstacle' to be greater than 0.0. ");
   }
   node->get_parameter(plugin_name_ + ".stateful", params_.stateful);
+  node->get_parameter(plugin_name_ + ".wheelbase", params_.wheelbase);
+  node->get_parameter(plugin_name_ + ".track_width", params_.track_width);
+  node->get_parameter(plugin_name_ + ".max_steering_angle", params_.max_steering_angle);
+  node->get_parameter(plugin_name_ + ".max_steering_angle_velocity", params_.max_steering_angle_velocity);
+  node->get_parameter(plugin_name_ + ".servo_angle_tolerance", params_.servo_angle_tolerance);
+  node->get_parameter(plugin_name_ + ".servo_gate_release_tolerance", params_.servo_gate_release_tolerance);
+  node->get_parameter(plugin_name_ + ".ackermann_acceleration", params_.ackermann_acceleration);
+  node->get_parameter(plugin_name_ + ".ackermann_jerk", params_.ackermann_jerk);
 
   if (params_.inflation_cost_scaling_factor <= 0.0) {
     RCLCPP_WARN(
@@ -352,6 +377,22 @@ ParameterHandler::dynamicParametersCallback(
         params_.transform_tolerance = parameter.as_double();
       } else if (name == plugin_name_ + ".max_robot_pose_search_dist") {
         params_.max_robot_pose_search_dist = parameter.as_double();
+      } else if (name == plugin_name_ + ".wheelbase") {
+        params_.wheelbase = parameter.as_double();
+      } else if (name == plugin_name_ + ".track_width") {
+        params_.track_width = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_steering_angle") {
+        params_.max_steering_angle = parameter.as_double();
+      } else if (name == plugin_name_ + ".max_steering_angle_velocity") {
+        params_.max_steering_angle_velocity = parameter.as_double();
+      } else if (name == plugin_name_ + ".servo_angle_tolerance") {
+        params_.servo_angle_tolerance = parameter.as_double();
+      } else if (name == plugin_name_ + ".servo_gate_release_tolerance") {
+        params_.servo_gate_release_tolerance = parameter.as_double();
+      } else if (name == plugin_name_ + ".ackermann_acceleration") {
+        params_.ackermann_acceleration = parameter.as_double();
+      } else if (name == plugin_name_ + ".ackermann_jerk") {
+        params_.ackermann_jerk = parameter.as_double();
       }
     } else if (type == ParameterType::PARAMETER_BOOL) {
       if (name == plugin_name_ + ".use_velocity_scaled_lookahead_dist") {

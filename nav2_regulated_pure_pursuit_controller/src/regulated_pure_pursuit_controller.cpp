@@ -80,6 +80,22 @@ void RegulatedPurePursuitController::configure(
     "curvature_lookahead_point", 1);
   is_rotating_to_heading_pub_ = node->create_publisher<std_msgs::msg::Bool>(
     "is_rotating_to_heading", 1);
+
+  ackermann_pub_ = node->create_publisher<ackermann_msgs::msg::AckermannDrive>(
+    "controller/cmd_ackermann", 1);
+
+  joint_states_sub_ = node->create_subscription<sensor_msgs::msg::JointState>(
+    "/joint_states", rclcpp::SensorDataQoS(),
+    [this](const sensor_msgs::msg::JointState::SharedPtr msg) {
+      for (size_t i = 0; i < msg->name.size(); ++i) {
+        if (msg->name[i] == "servo_l_joint" && i < msg->position.size()) {
+          servo_l_pos_ = msg->position[i];
+        } else if (msg->name[i] == "servo_r_joint" && i < msg->position.size()) {
+          servo_r_pos_ = msg->position[i];
+        }
+      }
+      servo_positions_received_ = true;
+    });
 }
 
 void RegulatedPurePursuitController::cleanup()
@@ -93,6 +109,8 @@ void RegulatedPurePursuitController::cleanup()
   carrot_pub_.reset();
   curvature_carrot_pub_.reset();
   is_rotating_to_heading_pub_.reset();
+  ackermann_pub_.reset();
+  joint_states_sub_.reset();
 }
 
 void RegulatedPurePursuitController::activate()
@@ -106,6 +124,7 @@ void RegulatedPurePursuitController::activate()
   carrot_pub_->on_activate();
   curvature_carrot_pub_->on_activate();
   is_rotating_to_heading_pub_->on_activate();
+  ackermann_pub_->on_activate();
 }
 
 void RegulatedPurePursuitController::deactivate()
@@ -119,6 +138,7 @@ void RegulatedPurePursuitController::deactivate()
   carrot_pub_->on_deactivate();
   curvature_carrot_pub_->on_deactivate();
   is_rotating_to_heading_pub_->on_deactivate();
+  ackermann_pub_->on_deactivate();
   last_command_velocity_ = geometry_msgs::msg::Twist();
 }
 
@@ -218,12 +238,21 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
   double lookahead_curvature = calculateCurvature(carrot_pose.pose.position);
 
   double regulation_curvature = lookahead_curvature;
+  if (params_->wheelbase > 0.0) {
+    const double max_curvature = std::tan(params_->max_steering_angle) / params_->wheelbase;
+    lookahead_curvature = std::clamp(lookahead_curvature, -max_curvature, max_curvature);
+    regulation_curvature = std::clamp(regulation_curvature, -max_curvature, max_curvature);
+  }
   if (params_->use_fixed_curvature_lookahead) {
     auto curvature_lookahead_pose = getLookAheadPoint(
       curv_lookahead_dist,
       transformed_plan, params_->interpolate_curvature_after_goal);
     rotate_to_path_carrot_pose = curvature_lookahead_pose;
     regulation_curvature = calculateCurvature(curvature_lookahead_pose.pose.position);
+    if (params_->wheelbase > 0.0) {
+      const double max_curvature = std::tan(params_->max_steering_angle) / params_->wheelbase;
+      regulation_curvature = std::clamp(regulation_curvature, -max_curvature, max_curvature);
+    }
     curvature_carrot_pub_->publish(createCarrotMsg(curvature_lookahead_pose));
   }
 
@@ -275,6 +304,23 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
     // Apply curvature to angular velocity after constraining linear velocity
     if (!params_->use_dynamic_window) {
       angular_vel = linear_vel * regulation_curvature;
+    } else if (params_->wheelbase > 0.0) {
+      const double regulated_linear_vel = linear_vel;
+      std::tie(linear_vel, angular_vel) =
+        dynamic_window_pure_pursuit::computeAckermannDynamicWindowVelocities(
+        last_command_velocity_.linear.x,
+        current_steering_angle_,
+        params_->max_linear_vel,
+        params_->min_linear_vel,
+        params_->max_linear_accel,
+        params_->max_linear_decel,
+        params_->max_steering_angle,
+        params_->max_steering_angle_velocity,
+        regulated_linear_vel,
+        regulation_curvature,
+        params_->wheelbase,
+        x_vel_sign,
+        control_duration_);
     } else {
       // compute optimal path tracking velocity commands
       // considering velocity and acceleration constraints (DWPP)
@@ -297,6 +343,41 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
         regulation_curvature,
         x_vel_sign,
         control_duration_);
+    }
+
+    if (params_->wheelbase > 0.0 && std::abs(linear_vel) > 1e-6) {
+      current_steering_angle_ = std::atan(angular_vel * params_->wheelbase / linear_vel);
+    } else if (std::abs(linear_vel) <= 1e-6) {
+      current_steering_angle_ = 0.0;
+    }
+
+    if (params_->wheelbase > 0.0 && servo_positions_received_) {
+      double expected_left = 0.0;
+      double expected_right = 0.0;
+      if (std::abs(current_steering_angle_) > 1e-6) {
+        const double radius = params_->wheelbase / std::tan(current_steering_angle_);
+        const double radius_left = radius - (params_->track_width / 2.0);
+        const double radius_right = radius + (params_->track_width / 2.0);
+        expected_left = radius_left == 0.0 ? M_PI / 2.0 : std::atan(params_->wheelbase / radius_left);
+        expected_right = radius_right == 0.0 ? M_PI / 2.0 : std::atan(params_->wheelbase / radius_right);
+      }
+
+      const double servo_error = std::max(
+        std::abs(servo_l_pos_ - expected_left),
+        std::abs(servo_r_pos_ - expected_right));
+
+      // Latch: engage when error exceeds tolerance, release only when servos
+      // reach the target solidly (error < half tolerance) to avoid chatter.
+      if (servo_error > params_->servo_angle_tolerance) {
+        servo_gate_active_ = true;
+      } else if (servo_error < params_->servo_gate_release_tolerance) {
+        servo_gate_active_ = false;
+      }
+
+      if (servo_gate_active_) {
+        linear_vel = 0.0;
+        angular_vel = 0.0;
+      }
     }
   }
 
@@ -321,6 +402,17 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
   cmd_vel.header = pose.header;
   cmd_vel.twist.linear.x = linear_vel;
   cmd_vel.twist.angular.z = angular_vel;
+
+  if (ackermann_pub_ && ackermann_pub_->is_activated() && params_->wheelbase > 0.0) {
+    ackermann_msgs::msg::AckermannDrive ackermann_cmd;
+    ackermann_cmd.speed = linear_vel;
+    ackermann_cmd.acceleration = static_cast<float>(params_->ackermann_acceleration);
+    ackermann_cmd.jerk = static_cast<float>(params_->ackermann_jerk);
+    ackermann_cmd.steering_angle = std::clamp(
+      current_steering_angle_, -params_->max_steering_angle, params_->max_steering_angle);
+    ackermann_cmd.steering_angle_velocity = params_->max_steering_angle_velocity;
+    ackermann_pub_->publish(ackermann_cmd);
+  }
 
   // For dynamic window scaling in open-loop speed control
   last_command_velocity_ = cmd_vel.twist;
@@ -551,6 +643,9 @@ void RegulatedPurePursuitController::reset()
   cancelling_ = false;
   finished_cancelling_ = false;
   has_reached_xy_tolerance_ = false;
+  current_steering_angle_ = 0.0;
+  servo_positions_received_ = false;
+  servo_gate_active_ = false;
   last_command_velocity_ = geometry_msgs::msg::Twist();
 }
 
