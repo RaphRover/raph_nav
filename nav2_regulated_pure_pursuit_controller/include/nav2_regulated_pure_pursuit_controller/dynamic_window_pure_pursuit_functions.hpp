@@ -311,6 +311,71 @@ inline std::tuple<double, double> computeDynamicWindowVelocities(
 }
 
 
+
+/**
+ * @brief Compute velocity commands for an Ackermann-steered robot using the Dynamic Window
+ *        approach in (v, steering_angle) space rather than (v, omega) space.
+ *
+ * @param current_linear_vel          Current linear velocity
+ * @param current_steering_angle      Current steering angle (rad, tracked externally)
+ * @param max_linear_vel              Maximum linear velocity
+ * @param min_linear_vel              Minimum linear velocity
+ * @param max_linear_accel            Maximum linear acceleration (positive)
+ * @param max_linear_decel            Maximum linear deceleration (negative)
+ * @param max_steering_angle          Physical steering angle limit (rad)
+ * @param max_steering_angle_velocity Steering rate limit (rad/s)
+ * @param regulated_linear_vel        Speed cap from RPP regulation
+ * @param target_curvature            Desired path curvature (1/m)
+ * @param wheelbase                   Front-to-rear axle distance (m)
+ * @param sign                        Velocity direction sign (+1 forward, -1 backward)
+ * @param dt                          Control timestep (s)
+ * @return                            {linear_vel, angular_vel} for TwistStamped compatibility
+ */
+inline std::tuple<double, double> computeAckermannDynamicWindowVelocities(
+  const double current_linear_vel,
+  const double current_steering_angle,
+  const double max_linear_vel,
+  const double min_linear_vel,
+  const double max_linear_accel,
+  const double max_linear_decel,
+  const double max_steering_angle,
+  const double max_steering_angle_velocity,
+  const double regulated_linear_vel,
+  const double target_curvature,
+  const double wheelbase,
+  const double sign,
+  const double dt)
+{
+  // Reuse computeDynamicWindow for the linear axis only (angular args zeroed out)
+  geometry_msgs::msg::Twist synthetic_speed;
+  synthetic_speed.linear.x = current_linear_vel;
+  synthetic_speed.angular.z = 0.0;
+
+  DynamicWindowBounds dw = computeDynamicWindow(
+    synthetic_speed,
+    max_linear_vel, min_linear_vel,
+    0.0, 0.0,
+    max_linear_accel, max_linear_decel,
+    0.0, 0.0,
+    dt);
+  applyRegulationToDynamicWindow(regulated_linear_vel, dw);
+
+  // Pick the highest-magnitude feasible speed in the commanded direction
+  const double optimal_linear_vel = (sign >= 0.0) ? dw.max_linear_vel : dw.min_linear_vel;
+
+  // Rate-limit and clamp steering angle to the physical window
+  const double delta_target = std::atan(target_curvature * wheelbase);
+  const double delta_step = max_steering_angle_velocity * dt;
+  const double delta_min = std::max(current_steering_angle - delta_step, -max_steering_angle);
+  const double delta_max = std::min(current_steering_angle + delta_step,  max_steering_angle);
+  const double optimal_delta = std::clamp(delta_target, delta_min, delta_max);
+
+  // Convert back to angular velocity for TwistStamped compatibility
+  const double optimal_angular_vel = optimal_linear_vel * std::tan(optimal_delta) / wheelbase;
+
+  return std::make_tuple(optimal_linear_vel, optimal_angular_vel);
+}
+
 }  // namespace dynamic_window_pure_pursuit
 
 }  // namespace nav2_regulated_pure_pursuit_controller
