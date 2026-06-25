@@ -26,6 +26,8 @@
 #include "nav2_util/node_utils.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_costmap_2d/costmap_filters/filter_values.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "nav2_regulated_pure_pursuit_controller/path_utils.hpp"
 
 using std::hypot;
 using std::min;
@@ -520,7 +522,8 @@ void RegulatedPurePursuitController::applyConstraints(
 void RegulatedPurePursuitController::setPlan(const nav_msgs::msg::Path & path)
 {
   has_reached_xy_tolerance_ = false;
-  path_handler_->setPlan(path);
+  nav_msgs::msg::Path plan_segment = firstViableSegment(path);
+  path_handler_->setPlan(plan_segment);
 }
 
 void RegulatedPurePursuitController::setSpeedLimit(
