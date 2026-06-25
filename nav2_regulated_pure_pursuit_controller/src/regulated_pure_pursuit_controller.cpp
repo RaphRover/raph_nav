@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <limits>
 #include <memory>
@@ -87,14 +88,35 @@ void RegulatedPurePursuitController::configure(
   joint_states_sub_ = node->create_subscription<sensor_msgs::msg::JointState>(
     "/joint_states", rclcpp::SensorDataQoS(),
     [this](const sensor_msgs::msg::JointState::SharedPtr msg) {
+      bool left_joint_seen = false;
+      bool right_joint_seen = false;
       for (size_t i = 0; i < msg->name.size(); ++i) {
         if (msg->name[i] == "servo_l_joint" && i < msg->position.size()) {
           servo_l_pos_ = msg->position[i];
+          left_joint_seen = true;
         } else if (msg->name[i] == "servo_r_joint" && i < msg->position.size()) {
           servo_r_pos_ = msg->position[i];
+          right_joint_seen = true;
         }
       }
-      servo_positions_received_ = true;
+
+      if (left_joint_seen && right_joint_seen && params_->wheelbase > 0.0) {
+        const double tan_left = std::tan(servo_l_pos_);
+        const double tan_right = std::tan(servo_r_pos_);
+        const double angle = std::atan2(
+          2.0 * tan_left * tan_right,
+          tan_left + tan_right);
+
+        if (std::isfinite(angle)) {
+          measured_steering_angle_ = angle;
+          if (measured_steering_angle_ > M_PI_2) {
+            measured_steering_angle_ -= M_PI;
+          } else if (measured_steering_angle_ < -M_PI_2) {
+            measured_steering_angle_ += M_PI;
+          }
+          steering_angle_received_ = true;
+        }
+      }
     });
 }
 
@@ -351,26 +373,14 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
       current_steering_angle_ = 0.0;
     }
 
-    if (params_->wheelbase > 0.0 && servo_positions_received_) {
-      double expected_left = 0.0;
-      double expected_right = 0.0;
-      if (std::abs(current_steering_angle_) > 1e-6) {
-        const double radius = params_->wheelbase / std::tan(current_steering_angle_);
-        const double radius_left = radius - (params_->track_width / 2.0);
-        const double radius_right = radius + (params_->track_width / 2.0);
-        expected_left = radius_left == 0.0 ? M_PI / 2.0 : std::atan(params_->wheelbase / radius_left);
-        expected_right = radius_right == 0.0 ? M_PI / 2.0 : std::atan(params_->wheelbase / radius_right);
-      }
+    if (params_->wheelbase > 0.0 && steering_angle_received_) {
+      const double steering_error = std::abs(measured_steering_angle_ - current_steering_angle_);
 
-      const double servo_error = std::max(
-        std::abs(servo_l_pos_ - expected_left),
-        std::abs(servo_r_pos_ - expected_right));
-
-      // Latch: engage when error exceeds tolerance, release only when servos
-      // reach the target solidly (error < half tolerance) to avoid chatter.
-      if (servo_error > params_->servo_angle_tolerance) {
+      // Latch: engage when steering error exceeds tolerance, release only when
+      // steering is solidly on-target (error < release tolerance) to avoid chatter.
+      if (steering_error > params_->steering_angle_tolerance) {
         servo_gate_active_ = true;
-      } else if (servo_error < params_->servo_gate_release_tolerance) {
+      } else if (steering_error < params_->steering_angle_release_tolerance) {
         servo_gate_active_ = false;
       }
 
@@ -644,7 +654,8 @@ void RegulatedPurePursuitController::reset()
   finished_cancelling_ = false;
   has_reached_xy_tolerance_ = false;
   current_steering_angle_ = 0.0;
-  servo_positions_received_ = false;
+  measured_steering_angle_ = 0.0;
+  steering_angle_received_ = false;
   servo_gate_active_ = false;
   last_command_velocity_ = geometry_msgs::msg::Twist();
 }

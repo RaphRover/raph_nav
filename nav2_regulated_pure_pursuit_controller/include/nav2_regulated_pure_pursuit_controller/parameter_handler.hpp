@@ -72,8 +72,8 @@ struct Parameters
   double track_width;                   // left-to-right steering track width (m)
   double max_steering_angle;            // maximum servo/steering angle (rad)
   double max_steering_angle_velocity;   // maximum rate of steering change (rad/s)
-  double servo_angle_tolerance;         // servo position check tolerance (rad)
-  double servo_gate_release_tolerance;  // hysteresis: latch releases below this error (rad)
+  double steering_angle_tolerance;      // steering angle tracking tolerance (rad)
+  double steering_angle_release_tolerance;  // hysteresis: latch releases below this error (rad)
   double ackermann_acceleration;        // acceleration published in AckermannDrive (m/s^2)
   double ackermann_jerk;                // jerk published in AckermannDrive (m/s^3)
 };

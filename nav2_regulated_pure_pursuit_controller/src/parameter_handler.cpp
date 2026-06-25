@@ -142,9 +142,9 @@ ParameterHandler::ParameterHandler(
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".max_steering_angle_velocity", rclcpp::ParameterValue(4.0));
   declare_parameter_if_not_declared(
-    node, plugin_name_ + ".servo_angle_tolerance", rclcpp::ParameterValue(0.08));
+    node, plugin_name_ + ".steering_angle_tolerance", rclcpp::ParameterValue(0.08));
   declare_parameter_if_not_declared(
-    node, plugin_name_ + ".servo_gate_release_tolerance", rclcpp::ParameterValue(0.04));
+    node, plugin_name_ + ".steering_angle_release_tolerance", rclcpp::ParameterValue(0.04));
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".ackermann_acceleration", rclcpp::ParameterValue(2.0));
   declare_parameter_if_not_declared(
@@ -276,8 +276,8 @@ ParameterHandler::ParameterHandler(
   node->get_parameter(plugin_name_ + ".track_width", params_.track_width);
   node->get_parameter(plugin_name_ + ".max_steering_angle", params_.max_steering_angle);
   node->get_parameter(plugin_name_ + ".max_steering_angle_velocity", params_.max_steering_angle_velocity);
-  node->get_parameter(plugin_name_ + ".servo_angle_tolerance", params_.servo_angle_tolerance);
-  node->get_parameter(plugin_name_ + ".servo_gate_release_tolerance", params_.servo_gate_release_tolerance);
+  node->get_parameter(plugin_name_ + ".steering_angle_tolerance", params_.steering_angle_tolerance);
+  node->get_parameter(plugin_name_ + ".steering_angle_release_tolerance", params_.steering_angle_release_tolerance);
   node->get_parameter(plugin_name_ + ".ackermann_acceleration", params_.ackermann_acceleration);
   node->get_parameter(plugin_name_ + ".ackermann_jerk", params_.ackermann_jerk);
 
@@ -385,10 +385,10 @@ ParameterHandler::dynamicParametersCallback(
         params_.max_steering_angle = parameter.as_double();
       } else if (name == plugin_name_ + ".max_steering_angle_velocity") {
         params_.max_steering_angle_velocity = parameter.as_double();
-      } else if (name == plugin_name_ + ".servo_angle_tolerance") {
-        params_.servo_angle_tolerance = parameter.as_double();
-      } else if (name == plugin_name_ + ".servo_gate_release_tolerance") {
-        params_.servo_gate_release_tolerance = parameter.as_double();
+      } else if (name == plugin_name_ + ".steering_angle_tolerance") {
+        params_.steering_angle_tolerance = parameter.as_double();
+      } else if (name == plugin_name_ + ".steering_angle_release_tolerance") {
+        params_.steering_angle_release_tolerance = parameter.as_double();
       } else if (name == plugin_name_ + ".ackermann_acceleration") {
         params_.ackermann_acceleration = parameter.as_double();
       } else if (name == plugin_name_ + ".ackermann_jerk") {

@@ -47,12 +47,13 @@ controller_server:
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       max_linear_vel: 0.5
+      # Ackermann control parameters
       wheelbase: 0.382
       track_width: 0.385
       max_steering_angle: 1.08
       max_steering_angle_velocity: 4.0
-      servo_angle_tolerance: 1.2
-      servo_gate_release_tolerance: 0.1
+      steering_angle_tolerance: 0.8
+      steering_angle_release_tolerance: 0.05
       ackermann_acceleration: 1.7
       ackermann_jerk: 8.0
       # Params commented are not considered when using Ackermann publishing
