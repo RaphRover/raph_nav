@@ -72,7 +72,7 @@
       plugin="nav2_controller::ControllerServer">
       <extra_arg name="use_intra_process_comms" value="true" />
       <param from="$(var navigation_params_file)" />
-      <remap from="cmd_vel" to="controller/cmd_vel" />
+      <remap from="cmd_vel" to="dummy/cmd_vel" />
     </composable_node>
 
     <composable_node name="bt_navigator"

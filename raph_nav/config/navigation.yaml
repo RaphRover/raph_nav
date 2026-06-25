@@ -42,23 +42,30 @@ controller_server:
       trans_stopped_velocity: 0.05
       rot_stopped_velocity: 0.05
       xy_goal_tolerance: 0.2
-      yaw_goal_tolerance: 0.7 #0.15 - consider lowering this, currently a lot of heading error is possible
+      yaw_goal_tolerance: 0.5
 
-    # MPPI controller replaced with Regulated Pure Pursuit for smoother ackermann tracking.
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.35 # this will be deprecated, use max_linear_vel if provided
-      #max_linear_vel: 0.5
-      max_angular_accel: 2.0 # Only used in rotate to heading
-      #max_angular_decel: -3.0
+      max_linear_vel: 0.5
+      wheelbase: 0.382
+      track_width: 0.385
+      max_steering_angle: 1.08
+      max_steering_angle_velocity: 4.0
+      servo_angle_tolerance: 1.2
+      servo_gate_release_tolerance: 0.1
+      ackermann_acceleration: 1.7
+      ackermann_jerk: 8.0
+      # Params commented are not considered when using Ackermann publishing
+      #max_angular_accel: 2.0
+      #max_angular_decel: -2.0
 
-      #use_dynamic_window: true
+      use_dynamic_window: true
       # Params only used if use_dynamic_window is true      
-      #min_linear_vel: -0.5
-      #max_angular_vel: 2.0
-      #min_angular_vel: -2.0
-      #max_linear_accel: 2.5
-      #max_linear_decel: -4.0
+      min_linear_vel: -0.5
+      #max_angular_vel: 1.7
+      #min_angular_vel: -1.7
+      max_linear_accel: 2.0
+      max_linear_decel: -5.0
       # Note to self: remember that anything to do with path end will apply to cusps with modified nav2_controller
 
       use_velocity_scaled_lookahead_dist: true
@@ -71,16 +78,16 @@ controller_server:
 
       use_regulated_linear_velocity_scaling: true
       # Params only used if use_regulated_linear_velocity_scaling is true
-      regulated_linear_scaling_min_radius: 0.3
-      regulated_linear_scaling_min_speed: 0.08
+      regulated_linear_scaling_min_radius: 0.5
+      regulated_linear_scaling_min_speed: 0.15
 
-      use_cost_regulated_linear_velocity_scaling: false #Maybe true?
+      use_cost_regulated_linear_velocity_scaling: true
       # Params only used if use_cost_regulated_linear_velocity_scaling is true
       cost_scaling_dist: 0.25
       cost_scaling_gain: 0.7
       inflation_cost_scaling_factor: 7.0
 
-      min_approach_linear_velocity: 0.08 # Maybe adjust this to min vel the robot can achieve (must be bigger that 0.01)
+      min_approach_linear_velocity: 0.08
       approach_velocity_scaling_dist: 0.4
       use_collision_detection: true
       max_allowed_time_to_collision_up_to_carrot: 1.0
@@ -95,7 +102,6 @@ controller_server:
       use_cancel_deceleration: false
       # Params only used if use_cancel_deceleration is true
       cancel_deceleration: 3.2
-      
 
 global_costmap:
   global_costmap:
@@ -135,7 +141,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
         footprint_clearing_enabled: true
-        observation_sources: pointcloud scan
+        observation_sources: scan #pointcloud scan
         combination_method: 1
         scan:
           topic: "/rplidar/scan_filtered"
@@ -147,19 +153,19 @@ global_costmap:
           raytrace_min_range: 0.15
           obstacle_max_range: 10.0
           obstacle_min_range: 0.15
-        pointcloud:
-          topic: "/oak/points"
-          data_type: PointCloud2
-          expected_update_rate: 0.0
-          min_obstacle_height: 0.08
-          max_obstacle_height: 0.35
-          inf_is_valid: false
-          marking: true
-          clearing: true
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 3.0
-          obstacle_min_range: 0.0
+        #pointcloud:
+        #  topic: "/oak/points"
+        #  data_type: PointCloud2
+        #  expected_update_rate: 1.0
+        #  min_obstacle_height: 0.07
+        #  max_obstacle_height: 0.35
+        #  inf_is_valid: false
+        #  marking: true
+        #  clearing: true
+        #  raytrace_max_range: 3.0
+        #  raytrace_min_range: 0.0
+        #  obstacle_max_range: 3.0
+        #  obstacle_min_range: 0.0
 
       denoise_layer:
         plugin: "nav2_costmap_2d::DenoiseLayer"
@@ -213,8 +219,8 @@ local_costmap:
         pointcloud:
           topic: "/oak/points"
           data_type: PointCloud2
-          expected_update_rate: 0.0
-          min_obstacle_height: 0.08
+          expected_update_rate: 1.5
+          min_obstacle_height: 0.07
           max_obstacle_height: 0.35
           inf_is_valid: false
           marking: true
@@ -255,7 +261,7 @@ planner_server:
       analytic_expansion_ratio: 3.5
       analytic_expansion_max_length: 1.5
       analytic_expansion_max_cost_override: false
-      minimum_turning_radius: 0.3
+      minimum_turning_radius: 0.25
       reverse_penalty: 3.0
       change_penalty: 2.0
       non_straight_penalty: 1.2

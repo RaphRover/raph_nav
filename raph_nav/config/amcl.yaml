@@ -30,7 +30,7 @@ amcl_node:
     robot_model_type: "nav2_amcl::OmniMotionModel" #No Ackermann model is available, but omni model includes Ackermann motion model.
     save_pose_rate: 0.5
     sigma_hit: 0.2
-    tf_broadcast: false #true #publishes map->odom tf
+    tf_broadcast: true #publishes map->odom tf
     transform_tolerance: 1.0
     update_min_a: 0.2
     update_min_d: 0.25
@@ -43,7 +43,7 @@ amcl_node:
     always_reset_initial_pose: false
     first_map_only: false
     # If needed you can set the initial pose of the robot with the following parameters:
-    set_initial_pose: true #false
+    set_initial_pose: false
     initial_pose:
       x: 0.0
       y: 0.0
