@@ -66,6 +66,13 @@
       <remap from="cmd_vel" to="dummy/cmd_vel" />
     </composable_node>
 
+    <composable_node name="behavior_server"
+      pkg="nav2_behaviors"
+      plugin="behavior_server::BehaviorServer">
+      <extra_arg name="use_intra_process_comms" value="true" />
+      <param from="$(var navigation_params_file)" />
+    </composable_node>
+
     <composable_node name="bt_navigator"
       pkg="nav2_bt_navigator"
       plugin="nav2_bt_navigator::BtNavigator">
