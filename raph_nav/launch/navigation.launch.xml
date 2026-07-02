@@ -37,6 +37,20 @@
     exec="component_container_isolated">
     <param from="$(var navigation_params_file)" />
 
+    <composable_node name="nav2_point_cloud_xyz"
+      pkg="depth_image_proc"
+      plugin="depth_image_proc::PointCloudXyzNode">
+      <extra_arg name="use_intra_process_comms" value="true" />
+      <remap from="image_rect" to="oak/stereo/image_raw" />
+      <remap from="camera_info" to="oak/stereo/camera_info" />
+      <remap from="points" to="nav2/points" />
+
+      <param name="queue_size" value="1" />
+      <param name="qos_overrides./nav2/points.publisher.reliability" value="best_effort" />
+      <param name="qos_overrides./nav2/points.publisher.history" value="keep_last" />
+      <param name="qos_overrides./nav2/points.publisher.depth" value="1" />
+    </composable_node>
+
     <composable_node name="planner_server"
       pkg="nav2_planner"
       plugin="nav2_planner::PlannerServer">
