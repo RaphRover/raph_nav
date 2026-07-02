@@ -67,6 +67,7 @@ struct Parameters
   bool stateful;
   bool use_dynamic_window;
   bool allow_obstacle_checking_beyond_goal;
+  double min_segment_length;
   // Ackermann steering parameters
   double wheelbase;                     // front-to-rear axle distance (m); 0 = disabled
   double track_width;                   // left-to-right steering track width (m)

@@ -624,7 +624,7 @@ void RegulatedPurePursuitController::applyConstraints(
 void RegulatedPurePursuitController::setPlan(const nav_msgs::msg::Path & path)
 {
   has_reached_xy_tolerance_ = false;
-  nav_msgs::msg::Path plan_segment = firstViableSegment(path);
+  nav_msgs::msg::Path plan_segment = firstViableSegment(path, params_->min_segment_length);
   path_handler_->setPlan(plan_segment);
 }
 

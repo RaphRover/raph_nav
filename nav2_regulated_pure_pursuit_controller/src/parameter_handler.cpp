@@ -131,6 +131,8 @@ ParameterHandler::ParameterHandler(
   declare_parameter_if_not_declared(
     node, plugin_name_ + ".allow_obstacle_checking_beyond_goal", rclcpp::ParameterValue(false));
   declare_parameter_if_not_declared(
+    node, plugin_name_ + ".min_segment_length", rclcpp::ParameterValue(0.1));
+  declare_parameter_if_not_declared(
       node, plugin_name_ + ".stateful", rclcpp::ParameterValue(true));
   // Ackermann steering parameters
   declare_parameter_if_not_declared(
@@ -260,6 +262,9 @@ ParameterHandler::ParameterHandler(
   node->get_parameter(
     plugin_name_ + ".allow_obstacle_checking_beyond_goal",
     params_.allow_obstacle_checking_beyond_goal);
+  node->get_parameter(
+    plugin_name_ + ".min_segment_length",
+    params_.min_segment_length);
   if (params_.allow_obstacle_checking_beyond_goal && !params_.use_velocity_scaled_lookahead_dist) {
     RCLCPP_WARN(
       logger_, "Parameter 'allow_obstacle_checking_beyond_goal' requires "
@@ -377,6 +382,8 @@ ParameterHandler::dynamicParametersCallback(
         params_.transform_tolerance = parameter.as_double();
       } else if (name == plugin_name_ + ".max_robot_pose_search_dist") {
         params_.max_robot_pose_search_dist = parameter.as_double();
+      } else if (name == plugin_name_ + ".min_segment_length") {
+        params_.min_segment_length = parameter.as_double();
       } else if (name == plugin_name_ + ".wheelbase") {
         params_.wheelbase = parameter.as_double();
       } else if (name == plugin_name_ + ".track_width") {

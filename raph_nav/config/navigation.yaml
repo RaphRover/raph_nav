@@ -61,6 +61,7 @@ controller_server:
       #max_angular_decel: -2.0
 
       use_dynamic_window: true
+      min_segment_length: 0.1  # Minimum arc length (m) a cusp-separated path segment must have to be selected as the path to follow
       # Params only used if use_dynamic_window is true      
       min_linear_vel: -0.5
       #max_angular_vel: 1.7
