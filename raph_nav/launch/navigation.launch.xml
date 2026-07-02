@@ -20,38 +20,15 @@
     default="$(find-pkg-share raph_nav)/config/navigation.yaml"
     description="Navigation parameters file for LiDAR and stereo camera setup" />
 
-  <arg name="scan_topic" 
-    default="/rplidar/scan_filtered"
-    description="Topic for laser scan data" />
-
-  <arg name="pointcloud_topic" 
-    default="/oak/points"
-    description="Topic for point cloud data" />
-
-  <arg name="depth_image_topic" 
-    default="/oak/stereo/image_raw"
-    description="Topic for depth image data" />
-
-  <arg name="depth_camera_info_topic" 
-    default="/oak/stereo/camera_info"
-    description="Topic for depth camera info data" />
-
-  <set_remap from="/scan" to="$(var scan_topic)" />
-  <set_remap from="/points" to="$(var pointcloud_topic)" />
-  <set_remap from="/image_rect" to="$(var depth_image_topic)" />
-  <set_remap from="/camera_info" to="$(var depth_camera_info_topic)" />
-
   <include unless="$(var localization)"
     file="$(find-pkg-share raph_nav)/launch/slam_toolbox.launch.py">
     <arg name="params_file" value="$(var slam_params_file)" />
-    <arg name="scan_topic" value="$(var scan_topic)" />
   </include>
 
   <include if="$(var localization)"
     file="$(find-pkg-share raph_nav)/launch/amcl.launch.py">
     <arg name="params_file" value="$(var amcl_params_file)" />
     <arg name="map_file" value="$(var map_file)" />
-    <arg name="scan_topic" value="$(var scan_topic)" />
   </include>
 
   <node_container namespace=""
