@@ -56,7 +56,7 @@ controller_server:
       steering_angle_release_tolerance: 0.05
       ackermann_acceleration: 1.7
       ackermann_jerk: 8.0
-      # Params commented are not considered when using Ackermann publishing
+      # max_angular_accel and max_angular_decel are not considered when using Ackermann publishing
       #max_angular_accel: 2.0
       #max_angular_decel: -2.0
 
@@ -251,7 +251,7 @@ planner_server:
       downsample_costmap: false
       downsampling_factor: 1
       tolerance: 0.25
-      allow_unknown: false # Ideally should be true
+      allow_unknown: false
       terminal_checking_interval: 5000
       max_iterations: 1000000
       max_on_approach_iterations: 1000
