@@ -115,7 +115,9 @@ To prevent rapid "chattering" near the threshold, a hysteresis latch is used:
 
 To ensure the controller never requests maneuvers that exceed the physical capabilities of the vehicle's chassis, both lookahead curvature and regulated curvature are clamped. The maximum achievable curvature ($k_{\max}$) is calculated directly from the vehicle's geometry:
 
-$$k_{\max} = \frac{\tan(\text{max\_steering\_angle})}{\text{wheelbase}}$$
+$$k_{\max} = \frac{\tan(\delta_{\max})}{L}$$
+
+Where, $\delta_{\max}$ is the maximum steering angle and $L$ is the wheelbase.
 
 By hard-clamping requested path curvatures to $[-k_{\max}, +k_{\max}]$, erratic controller behaviors can be eliminated and tracking stability can be improved.
 
