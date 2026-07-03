@@ -1,5 +1,5 @@
-#ifndef NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_
-#define NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_
+#ifndef NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_
+#define NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_
 
 #include <cmath>
 #include <optional>
@@ -8,7 +8,7 @@
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-namespace nav2_regulated_pure_pursuit_controller
+namespace nav2_ackermann_regulated_pure_pursuit_controller
 {
 
 /**
@@ -175,6 +175,6 @@ inline nav_msgs::msg::Path firstViableSegment(
   return segments.front();
 }
 
-}  // namespace nav2_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
 
-#endif  // NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_
+#endif  // NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_UTILS_HPP_

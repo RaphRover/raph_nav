@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATED_PURE_PURSUIT_CONTROLLER_HPP_
-#define NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATED_PURE_PURSUIT_CONTROLLER_HPP_
+#ifndef NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER_HPP_
+#define NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER_HPP_
 
 #include <string>
 #include <vector>
@@ -30,31 +30,31 @@
 #include "std_msgs/msg/bool.hpp"
 #include "ackermann_msgs/msg/ackermann_drive.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "nav2_regulated_pure_pursuit_controller/path_handler.hpp"
-#include "nav2_regulated_pure_pursuit_controller/collision_checker.hpp"
-#include "nav2_regulated_pure_pursuit_controller/parameter_handler.hpp"
-#include "nav2_regulated_pure_pursuit_controller/regulation_functions.hpp"
-#include "nav2_regulated_pure_pursuit_controller/dynamic_window_pure_pursuit_functions.hpp"
+#include "nav2_ackermann_regulated_pure_pursuit_controller/path_handler.hpp"
+#include "nav2_ackermann_regulated_pure_pursuit_controller/collision_checker.hpp"
+#include "nav2_ackermann_regulated_pure_pursuit_controller/parameter_handler.hpp"
+#include "nav2_ackermann_regulated_pure_pursuit_controller/regulation_functions.hpp"
+#include "nav2_ackermann_regulated_pure_pursuit_controller/dynamic_window_pure_pursuit_functions.hpp"
 
-namespace nav2_regulated_pure_pursuit_controller
+namespace nav2_ackermann_regulated_pure_pursuit_controller
 {
 
 /**
- * @class nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+ * @class nav2_ackermann_regulated_pure_pursuit_controller::AckermannRegulatedPurePursuitController
  * @brief Regulated pure pursuit controller plugin
  */
-class RegulatedPurePursuitController : public nav2_core::Controller
+class AckermannRegulatedPurePursuitController : public nav2_core::Controller
 {
 public:
   /**
-   * @brief Constructor for nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+   * @brief Constructor for nav2_ackermann_regulated_pure_pursuit_controller::AckermannRegulatedPurePursuitController
    */
-  RegulatedPurePursuitController() = default;
+  AckermannRegulatedPurePursuitController() = default;
 
   /**
-   * @brief Destrructor for nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
+   * @brief Destrructor for nav2_ackermann_regulated_pure_pursuit_controller::AckermannRegulatedPurePursuitController
    */
-  ~RegulatedPurePursuitController() override = default;
+  ~AckermannRegulatedPurePursuitController() override = default;
 
   /**
    * @brief Configure controller state machine
@@ -215,7 +215,7 @@ protected:
   std::string plugin_name_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   nav2_costmap_2d::Costmap2D * costmap_;
-  rclcpp::Logger logger_ {rclcpp::get_logger("RegulatedPurePursuitController")};
+  rclcpp::Logger logger_ {rclcpp::get_logger("AckermannRegulatedPurePursuitController")};
 
   Parameters * params_;
   double goal_dist_tol_;
@@ -246,11 +246,11 @@ protected:
   bool steering_angle_received_{false};
   bool servo_gate_active_{false};
 
-  std::unique_ptr<nav2_regulated_pure_pursuit_controller::PathHandler> path_handler_;
-  std::unique_ptr<nav2_regulated_pure_pursuit_controller::ParameterHandler> param_handler_;
-  std::unique_ptr<nav2_regulated_pure_pursuit_controller::CollisionChecker> collision_checker_;
+  std::unique_ptr<nav2_ackermann_regulated_pure_pursuit_controller::PathHandler> path_handler_;
+  std::unique_ptr<nav2_ackermann_regulated_pure_pursuit_controller::ParameterHandler> param_handler_;
+  std::unique_ptr<nav2_ackermann_regulated_pure_pursuit_controller::CollisionChecker> collision_checker_;
 };
 
-}  // namespace nav2_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
 
-#endif  // NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATED_PURE_PURSUIT_CONTROLLER_HPP_
+#endif  // NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER_HPP_

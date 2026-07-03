@@ -46,7 +46,7 @@ controller_server:
       yaw_goal_tolerance: 0.5
 
     FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      plugin: "nav2_ackermann_regulated_pure_pursuit_controller::AckermannRegulatedPurePursuitController"
       max_linear_vel: 0.5
       # Ackermann control parameters
       wheelbase: 0.382

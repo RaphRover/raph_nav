@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
-#define NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
+#ifndef NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
+#define NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
 
 #include <string>
 #include <vector>
@@ -25,7 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
-namespace nav2_regulated_pure_pursuit_controller
+namespace nav2_ackermann_regulated_pure_pursuit_controller
 {
 
 namespace dynamic_window_pure_pursuit
@@ -378,6 +378,6 @@ inline std::tuple<double, double> computeAckermannDynamicWindowVelocities(
 
 }  // namespace dynamic_window_pure_pursuit
 
-}  // namespace nav2_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
 
-#endif  // NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
+#endif  // NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__DYNAMIC_WINDOW_PURE_PURSUIT_FUNCTIONS_HPP_
