@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>nav2_ackermann_regulated_pure_pursuit_controller</name>
+  <name>nav2_ackermann_rpp_controller</name>
   <version>1.3.12</version>
   <description>Ackermann Regulated Pure Pursuit Controller</description>
   <maintainer email="stevenmacenski@gmail.com">Steve Macenski</maintainer>
@@ -29,7 +29,7 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <nav2_core plugin="${prefix}/nav2_ackermann_regulated_pure_pursuit_controller.xml" />
+    <nav2_core plugin="${prefix}/nav2_ackermann_rpp_controller.xml" />
   </export>
 
 </package>

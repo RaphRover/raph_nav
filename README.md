@@ -3,7 +3,7 @@
 This repository contains a ROS 2 navigation stack for Raph Rover with:
 
 - A top-level navigation package: `raph_nav`
-- A customized Nav2 controller plugin package: `nav2_ackermann_regulated_pure_pursuit_controller`
+- A customized Nav2 controller plugin package: `nav2_ackermann_rpp_controller`
 
 The stack is designed for Ackermann steering and supports both mapping mode (SLAM) and localization mode (AMCL + map server).
 
@@ -14,7 +14,7 @@ The stack is designed for Ackermann steering and supports both mapping mode (SLA
     - Nav2 parameter files (`navigation.yaml`, `amcl.yaml`, `slam_toolbox.yaml`)
     - behavior trees
     - maps
-- `nav2_ackermann_regulated_pure_pursuit_controller/`
+- `nav2_ackermann_rpp_controller/`
     - custom fork of Nav2 Regulated Pure Pursuit with Ackermann-oriented changes
 
 ## Main capabilities
@@ -23,7 +23,7 @@ The stack is designed for Ackermann steering and supports both mapping mode (SLA
 
 - Runs a full Nav2 pipeline in a single composable container:
     - planner server (`nav2_smac_planner`)
-    - controller server (`nav2_ackermann_regulated_pure_pursuit_controller`)
+    - controller server (`nav2_ackermann_rpp_controller`)
     - behavior server, BT navigator, waypoint follower, lifecycle manager
 - Supports two localization modes:
     - SLAM mode via `slam_toolbox` (mapping)
@@ -83,7 +83,7 @@ Notable behavior:
     - Rationale: Nav2 controller interface still requires Twist output, but this stack uses Ackermann commands as the actuator command path.
     - This prevents accidental consumption of Twist commands by other nodes while keeping Nav2 internals intact.
 
-## Custom changes to `nav2_ackermann_regulated_pure_pursuit_controller`
+## Custom changes to `nav2_ackermann_rpp_controller`
 
 ### 1. Native Ackermann Messaging & Twist Remapping
 

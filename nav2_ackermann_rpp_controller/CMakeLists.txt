@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(nav2_ackermann_regulated_pure_pursuit_controller)
+project(nav2_ackermann_rpp_controller)
 
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
@@ -38,10 +38,10 @@ set(dependencies
   sensor_msgs
 )
 
-set(library_name nav2_ackermann_regulated_pure_pursuit_controller)
+set(library_name nav2_ackermann_rpp_controller)
 
 add_library(${library_name} SHARED
-  src/ackermann_regulated_pure_pursuit_controller.cpp
+  src/ackermann_rpp_controller.cpp
         src/collision_checker.cpp
         src/parameter_handler.cpp
         src/path_handler.cpp)
@@ -71,7 +71,7 @@ ament_export_include_directories(include)
 ament_export_libraries(${library_name})
 ament_export_dependencies(${dependencies})
 
-pluginlib_export_plugin_description_file(nav2_core nav2_ackermann_regulated_pure_pursuit_controller.xml)
+pluginlib_export_plugin_description_file(nav2_core nav2_ackermann_rpp_controller.xml)
 
 ament_package()
 

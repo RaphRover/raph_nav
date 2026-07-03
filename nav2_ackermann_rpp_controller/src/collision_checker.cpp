@@ -19,9 +19,9 @@
 #include <vector>
 #include <utility>
 
-#include "nav2_ackermann_regulated_pure_pursuit_controller/collision_checker.hpp"
+#include "nav2_ackermann_rpp_controller/collision_checker.hpp"
 
-namespace nav2_ackermann_regulated_pure_pursuit_controller
+namespace nav2_ackermann_rpp_controller
 {
 
 using namespace nav2_costmap_2d;  // NOLINT
@@ -185,7 +185,7 @@ double CollisionChecker::costAtPose(const double & x, const double & y)
       "The dimensions of the costmap is too small to fully include your robot's footprint, "
       "thusly the robot cannot proceed further");
     throw nav2_core::ControllerException(
-            "AckermannRegulatedPurePursuitController: Dimensions of the costmap are too small "
+            "AckermannRPPController: Dimensions of the costmap are too small "
             "to encapsulate the robot footprint at current speeds!");
   }
 
@@ -193,4 +193,4 @@ double CollisionChecker::costAtPose(const double & x, const double & y)
   return static_cast<double>(cost);
 }
 
-}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_rpp_controller

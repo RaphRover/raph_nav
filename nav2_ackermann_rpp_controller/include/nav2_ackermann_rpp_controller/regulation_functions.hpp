@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATION_FUNCTIONS_HPP_
-#define NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATION_FUNCTIONS_HPP_
+#ifndef NAV2_ACKERMANN_RPP_CONTROLLER__REGULATION_FUNCTIONS_HPP_
+#define NAV2_ACKERMANN_RPP_CONTROLLER__REGULATION_FUNCTIONS_HPP_
 
 #include <string>
 #include <vector>
@@ -24,9 +24,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "nav2_costmap_2d/costmap_2d_ros.hpp"
 #include "nav2_util/geometry_utils.hpp"
-#include "nav2_ackermann_regulated_pure_pursuit_controller/parameter_handler.hpp"
+#include "nav2_ackermann_rpp_controller/parameter_handler.hpp"
 
-namespace nav2_ackermann_regulated_pure_pursuit_controller
+namespace nav2_ackermann_rpp_controller
 {
 
 namespace heuristics
@@ -135,6 +135,6 @@ inline double approachVelocityConstraint(
 
 }  // namespace heuristics
 
-}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_rpp_controller
 
-#endif  // NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__REGULATION_FUNCTIONS_HPP_
+#endif  // NAV2_ACKERMANN_RPP_CONTROLLER__REGULATION_FUNCTIONS_HPP_

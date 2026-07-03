@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_HANDLER_HPP_
-#define NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_HANDLER_HPP_
+#ifndef NAV2_ACKERMANN_RPP_CONTROLLER__PATH_HANDLER_HPP_
+#define NAV2_ACKERMANN_RPP_CONTROLLER__PATH_HANDLER_HPP_
 
 #include <string>
 #include <vector>
@@ -29,18 +29,18 @@
 #include "nav2_core/controller_exceptions.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
 
-namespace nav2_ackermann_regulated_pure_pursuit_controller
+namespace nav2_ackermann_rpp_controller
 {
 
 /**
- * @class nav2_ackermann_regulated_pure_pursuit_controller::PathHandler
+ * @class nav2_ackermann_rpp_controller::PathHandler
  * @brief Handles input paths to transform them to local frames required
  */
 class PathHandler
 {
 public:
   /**
-   * @brief Constructor for nav2_ackermann_regulated_pure_pursuit_controller::PathHandler
+   * @brief Constructor for nav2_ackermann_rpp_controller::PathHandler
    */
   PathHandler(
     tf2::Duration transform_tolerance,
@@ -48,7 +48,7 @@ public:
     std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros);
 
   /**
-   * @brief Destrructor for nav2_ackermann_regulated_pure_pursuit_controller::PathHandler
+   * @brief Destrructor for nav2_ackermann_rpp_controller::PathHandler
    */
   ~PathHandler() = default;
 
@@ -95,6 +95,6 @@ protected:
   nav_msgs::msg::Path global_plan_;
 };
 
-}  // namespace nav2_ackermann_regulated_pure_pursuit_controller
+}  // namespace nav2_ackermann_rpp_controller
 
-#endif  // NAV2_ACKERMANN_REGULATED_PURE_PURSUIT_CONTROLLER__PATH_HANDLER_HPP_
+#endif  // NAV2_ACKERMANN_RPP_CONTROLLER__PATH_HANDLER_HPP_

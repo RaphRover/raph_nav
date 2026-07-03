@@ -22,7 +22,7 @@
   <exec_depend>nav2_amcl</exec_depend>
   <exec_depend>nav2_lifecycle_manager</exec_depend>
   <exec_depend>nav2_costmap_2d</exec_depend>
-  <exec_depend>nav2_ackermann_regulated_pure_pursuit_controller</exec_depend>
+  <exec_depend>nav2_ackermann_rpp_controller</exec_depend>
   <exec_depend>nav2_smac_planner</exec_depend>
   <exec_depend>nav2_util</exec_depend>
   <exec_depend>nav2_msgs</exec_depend>

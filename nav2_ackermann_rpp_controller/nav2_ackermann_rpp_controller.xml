@@ -1,0 +1,10 @@
+<class_libraries>
+    <library path="nav2_ackermann_rpp_controller">
+        <class type="nav2_ackermann_rpp_controller::AckermannRPPController" base_class_type="nav2_core::Controller">
+            <description>
+                nav2_ackermann_rpp_controller
+            </description>
+        </class>
+    </library>
+</class_libraries>
+
