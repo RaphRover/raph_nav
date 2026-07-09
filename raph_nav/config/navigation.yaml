@@ -178,7 +178,7 @@ global_costmap:
           topic: "/nav2/points"
           data_type: PointCloud2
           expected_update_rate: 1.0
-          min_obstacle_height: 0.07
+          min_obstacle_height: 0.09
           max_obstacle_height: 0.35
           inf_is_valid: false
           marking: true
